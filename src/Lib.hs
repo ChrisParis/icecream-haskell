@@ -19,6 +19,8 @@ instance Show Ingredient where
 instance Ord Ingredient where
   compare a b = name a `compare` name b
 
+data Property = Property String (Ingredient -> Double) (Bounds Double)
+
 cream = Ingredient
   { name = "cream"
   , fat = 0.36
@@ -34,6 +36,11 @@ water = Ingredient
   }
 
 ingredients = [cream, water]
+
+properties = [ Property "Fat" fat (Equ 0.18)
+             , Property "Sweetness" sweetness (Equ 0.2)
+             , Property "Solids" solids (Bound 0.2 1.0)
+             ]
 
 objFun :: LinFunc Ingredient Double
 objFun = varSum ingredients
