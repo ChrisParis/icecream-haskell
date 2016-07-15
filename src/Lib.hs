@@ -40,7 +40,23 @@ water = Ingredient
   , bounds = Bound 0 1
   }
 
-ingredients = [cream, water]
+sugar = Ingredient
+  { name = "sugar"
+  , fat = 0
+  , sweetness = 1
+  , solids = 1
+  , bounds = Bound 0 1
+  }
+
+chocolate = Ingredient
+  { name = "chocolate"
+  , fat = 0.36
+  , sweetness = 0.19
+  , solids = 1
+  , bounds = Equ 0.05
+  }
+
+ingredients = [cream, water, sugar, chocolate]
 
 properties = [ Property "Fat" fat (Equ 0.18)
              , Property "Sweetness" sweetness (Equ 0.2)
