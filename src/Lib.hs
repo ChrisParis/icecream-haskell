@@ -4,6 +4,7 @@ module Lib
     ( someFunc
     ) where
 
+import Data.Map.Lazy
 import Data.LinearProgram
 import Data.LinearProgram.GLPK
 
@@ -23,6 +24,15 @@ instance Ord Ingredient where
   compare a b = name a `compare` name b
 
 data Property = Property String (Ingredient -> Double) (Bounds Double)
+
+instance Show Property where
+  show (Property name _ _) = name
+
+instance Ord Property where
+  compare (Property a _ _) (Property b _ _) = a `compare` b
+
+instance Eq Property where
+  (==) (Property a _ _) (Property b _ _) = a == b
 
 cream = Ingredient
   { name = "cream"
@@ -70,6 +80,16 @@ buildConstraints properties ingredients = do
   mapM_ buildConstraint properties
   mapM_ buildVarBounds ingredients
 
+propertyTotal :: Map Ingredient Double -> Property -> Double
+propertyTotal ingredientAmounts (Property _ get _) =
+  foldrWithKey f 0 ingredientAmounts
+  where
+    f ingredient iFrac total = total + iFrac * (get ingredient)
+
+propertyTotals :: Map Ingredient Double -> [Property] -> Map Property Double
+propertyTotals ingredientAmounts properties =
+  fromList $ zip properties $ fmap (propertyTotal ingredientAmounts) properties
+
 objFun :: LinFunc Ingredient Double
 objFun = varSum ingredients
 
@@ -81,4 +101,11 @@ lp = execLPM $ do
   constrain' "Total" (varSum ingredients) (Equ 1.0)
 
 someFunc :: IO ()
-someFunc = print =<< glpSolveVars simplexDefaults lp
+someFunc = do
+  (code, vars) <- glpSolveVars simplexDefaults lp
+  print (code, vars)
+  case vars of
+    Nothing -> return ()
+    Just (_, ingredientAmounts) -> do
+      putStr "Formula totals: "
+      print $ propertyTotals ingredientAmounts properties
